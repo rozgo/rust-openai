@@ -1,6 +1,6 @@
 [package]
 name = "openai"
-version = "0.2.2"
+version = "0.3.0"
 authors = ["Andrew <andrew@subarctic.org>"]
 description = "OpenAI client for Rust"
 license = "MIT"
