@@ -55,7 +55,7 @@ pub trait GymMember {
    fn start (&mut self, s: &GymShape, t: &GymState) -> ();
    fn reward (&mut self, gym_reward, gym_done) -> ();
    fn reset (&mut self) -> ();
-   fn tick (&mut self) -> u64;
+   fn tick (&mut self, &mut Vec<u8>) -> u64;
    fn close (&mut self) -> ();
 }
 pub struct GymRemote {
@@ -130,8 +130,7 @@ impl GymRemote {
          self.sync();
          let mut vnc = self.vnc.as_mut().unwrap();
 
-         //TODO sync agent moves
-         let action = agent.tick();
+         let action = agent.tick(&mut self.state.screen);
          if self.mode=="atari" {
             if action==0 {
                vnc.send_key_event(false, XK_Left).unwrap();
