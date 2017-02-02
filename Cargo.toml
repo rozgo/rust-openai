@@ -5,7 +5,6 @@ authors = ["Andrew <andrew@subarctic.org>"]
 description = "OpenAI client for Rust"
 license = "MIT"
 categories = ["api-bindings", "emulators", "game-engines", "games", "multimedia"]
-include = ["flashgames.json"]
 
 [dependencies]
 glob = "0.2.11"
