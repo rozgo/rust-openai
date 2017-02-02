@@ -398,11 +398,16 @@ impl Gym {
    pub fn remote_prep_container(&mut self, pi: u32) -> () {
       let base_vnc = 5900 + pi;
       let base_rec = 15900 + pi;
+      let mut base_docker = "quay.io/openai/universe.gym-core:0.20.6";
+      if self.env_id.starts_with("flashgames.") {
+         base_docker = "quay.io/openai/universe.flashgames:0.20.25";
+      }
+      println!("base docker: {}", base_docker);
       let ecode = Command::new("docker")
          .arg("run")
          .arg("-p").arg( format!("5900:{}", base_vnc) )
          .arg("-p").arg( format!("15900:{}", base_rec) )
-         .arg("quay.io/openai/universe.gym-core:0.20.0")
+         .arg(base_docker)
          .spawn();
       print!("spawned docker process at {} / {}", base_vnc, base_rec);
 
@@ -481,7 +486,7 @@ impl Gym {
       return r;
    }
    pub fn remote_sanitize(&mut self) -> () {
-      Command::new("sh").arg("-c").arg("docker kill $(docker ps -q)").spawn();
+      Command::new("sh").arg("-c").arg("docker kill $(docker ps -q); true").spawn();
    }
    pub fn start<F,T: GymMember>(&mut self, start_agent: F) -> ()
    where F: Fn() -> T + Send + Sync + 'static
