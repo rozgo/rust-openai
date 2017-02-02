@@ -43,13 +43,13 @@ pub type gym_reward = f64;
 pub type gym_done = bool;
 pub type gym_range = Vec<usize>;
 pub struct GymShape {
-   action_space: gym_range,
-   observation_space: gym_range,
-   reward_max: gym_reward,
-   reward_min: gym_reward
+   pub action_space: gym_range,
+   pub observation_space: gym_range,
+   pub reward_max: gym_reward,
+   pub reward_min: gym_reward
 }
 pub struct GymState {
-   screen: Vec<u8>
+   pub screen: Vec<u8>
 }
 pub trait GymMember {
    fn start (&mut self, s: &GymShape, t: &GymState) -> ();
