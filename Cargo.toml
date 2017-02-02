@@ -6,6 +6,9 @@ description = "OpenAI client for Rust"
 license = "MIT"
 categories = ["api-bindings", "emulators", "game-engines", "games", "multimedia"]
 
+[package]
+include = ["flashgames.json"]
+
 [dependencies]
 glob = "0.2.11"
 image = "0.12.1"
