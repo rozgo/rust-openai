@@ -74,6 +74,8 @@ pub struct GymRemote {
    rewarder: Option<((self::websocket::client::Sender<websocket::WebSocketStream>, self::websocket::client::Receiver<websocket::WebSocketStream>))>,
    state: GymState,
    shape: GymShape,
+   offset_width: usize,
+   offset_height: usize,
    time: Instant,
    frame: u32
 }
@@ -317,7 +319,12 @@ impl GymRemote {
 
       let mut vnc = self.vnc.as_mut().unwrap();
 
-      vnc.request_update(vnc::Rect { left: 0, top: 0, width: width as u16, height: height as u16}, false).unwrap();
+      vnc.request_update(vnc::Rect {
+         left: self.offset_width as u16,
+         top: self.offset_height as u16,
+         width: (self.offset_width+width) as u16,
+         height: (self.offset_height+height) as u16
+      }, false).unwrap();
       for event in vnc.poll_iter() {
          use vnc::client::Event;
          match event {
@@ -327,9 +334,9 @@ impl GymRemote {
                }
             },
             Event::PutPixels(vnc_rect, ref pixels) => {
-               self.black_screen = true;
-               for x in vnc_rect.left .. min(width as u16, (vnc_rect.left+vnc_rect.width)) {
-                  for y in vnc_rect.top .. min(height as u16, (vnc_rect.top+vnc_rect.height)) {
+               self.black_screen = false;
+               for x in vnc_rect.left .. (vnc_rect.left+vnc_rect.width) {
+                  for y in vnc_rect.top .. (vnc_rect.top+vnc_rect.height) {
                      let i = x - vnc_rect.left;
                      let j = y - vnc_rect.top;
                      let left = 4*(j * vnc_rect.width + i) as usize;
@@ -340,16 +347,18 @@ impl GymRemote {
                }
 
                if !self.black_screen {
-               for x in vnc_rect.left .. min(width as u16, (vnc_rect.left+vnc_rect.width)) {
-                  for y in vnc_rect.top .. min(height as u16, (vnc_rect.top+vnc_rect.height)) {
+               for x in vnc_rect.left .. min((self.offset_width+width) as u16, (vnc_rect.left+vnc_rect.width)) {
+                  for y in vnc_rect.top .. min((self.offset_height+height) as u16, (vnc_rect.top+vnc_rect.height)) {
                      let i = x - vnc_rect.left;
                      let j = y - vnc_rect.top;
                      let left = 4*(j * vnc_rect.width + i) as usize;
-                     let x = x as usize;
-                     let y = y as usize;
-                     self.state.screen[3*(y*width + x)] = pixels[left+2];
-                     self.state.screen[3*(y*width + x)+1] = pixels[left+1];
-                     self.state.screen[3*(y*width + x)+2] = pixels[left];
+                     if (x as usize)>=self.offset_width && (y as usize)>=self.offset_height {
+                        let x = (x as usize) - self.offset_width;
+                        let y = (y as usize) - self.offset_height;
+                        self.state.screen[3*(y*width + x)] = pixels[left+2];
+                        self.state.screen[3*(y*width + x)+1] = pixels[left+1];
+                        self.state.screen[3*(y*width + x)+2] = pixels[left];
+                     }
                   }
                }}
 
@@ -474,6 +483,8 @@ impl Gym {
       self.remote_prep_recorder(pi);
       let mut screen_width = ATARI_WIDTH;
       let mut screen_height = ATARI_HEIGHT;
+      let mut offset_width = 0;
+      let mut offset_height = 0;
       if self.env_id.starts_with("flashgames.") {
          let data = Json::from_str(include_str!("../flashgames.json")).unwrap();
          let obj = data.as_object().unwrap()
@@ -481,6 +492,8 @@ impl Gym {
                    .as_object().unwrap();
          screen_width = obj.get("width").unwrap().as_u64().unwrap() as u32;
          screen_height = obj.get("height").unwrap().as_u64().unwrap() as u32;
+         offset_width = 20;
+         offset_height = 84;
       }
       let r = GymRemote {
          black_screen: false,
@@ -502,6 +515,8 @@ impl Gym {
             reward_max : f64::INFINITY,
             reward_min : f64::NEG_INFINITY
          },
+         offset_width: offset_width,
+         offset_height: offset_height,
          time: Instant::now(),
          frame: 0
       };
