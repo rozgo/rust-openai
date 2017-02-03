@@ -475,7 +475,12 @@ impl Gym {
       let mut screen_width = ATARI_WIDTH;
       let mut screen_height = ATARI_HEIGHT;
       if self.env_id.starts_with("flashgames.") {
-         Json::from_str(include_str!("../flashgames.json"));
+         let data = Json::from_str(include_str!("../flashgames.json")).unwrap();
+         let obj = data.as_object().unwrap()
+                   .get(&self.env_id[..]).unwrap()
+                   .as_object().unwrap();
+         screen_width = obj.get("width").unwrap().as_u64().unwrap() as u32;
+         screen_height = obj.get("height").unwrap().as_u64().unwrap() as u32;
       }
       let r = GymRemote {
          black_screen: false,
@@ -489,11 +494,11 @@ impl Gym {
          vnc: None,
          rewarder: None,
          state: GymState {
-            screen: vec![0; (ATARI_WIDTH * ATARI_HEIGHT * 3) as usize]
+            screen: vec![0; (screen_width * screen_height * 3) as usize]
          },
          shape: GymShape {
             action_space: vec![6],
-            observation_space: vec![ATARI_WIDTH as usize, ATARI_HEIGHT as usize, 3 as usize],
+            observation_space: vec![screen_width as usize, screen_height as usize, 3 as usize],
             reward_max : f64::INFINITY,
             reward_min : f64::NEG_INFINITY
          },
