@@ -42,12 +42,14 @@ use std::collections::HashMap;
 pub type gym_reward = f64;
 pub type gym_done = bool;
 pub type gym_range = Vec<usize>;
+#[derive(Debug, Clone)]
 pub struct GymShape {
    pub action_space: gym_range,
    pub observation_space: gym_range,
    pub reward_max: gym_reward,
    pub reward_min: gym_reward
 }
+#[derive(Debug, Clone)]
 pub struct GymState {
    pub screen: Vec<u8>
 }
