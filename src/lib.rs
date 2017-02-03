@@ -15,6 +15,7 @@ use std::iter::repeat;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::f64;
+use rustc_serialize::json::{Json, Object};
 
 extern crate glob;
 use glob::glob;
@@ -471,6 +472,11 @@ impl Gym {
    pub fn start_remote(&mut self, pi: u32) -> GymRemote {
       self.remote_prep_container(pi);
       self.remote_prep_recorder(pi);
+      let mut screen_width = ATARI_WIDTH;
+      let mut screen_height = ATARI_HEIGHT;
+      if self.env_id.starts_with("flashgames.") {
+         Json::from_str(include_str!("../flashgames.json"));
+      }
       let r = GymRemote {
          black_screen: false,
          dirty: true,
