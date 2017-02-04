@@ -134,7 +134,7 @@ impl GymRemote {
          if self.time.elapsed().as_secs() > self.duration { break; }
 
          self.sync();
-         let mut screen_copy = self.state.screen.copy();
+         let mut screen_copy = self.state.screen.clone();
          let action = agent.tick(&mut screen_copy);
          self.render_frame(screen_copy);
 
@@ -287,7 +287,7 @@ impl GymRemote {
 
       //requires nonblocking before moving into main thread
    }
-   pub fn render_frame(&mut self, screen: &[u8]) {
+   pub fn render_frame(&mut self, screen: Vec<u8>) {
       let width = self.shape.observation_space[0];
       let height = self.shape.observation_space[1];
 
