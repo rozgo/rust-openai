@@ -132,10 +132,14 @@ impl GymRemote {
       loop {
          use x11::keysym::*;
          if self.time.elapsed().as_secs() > self.duration { break; }
-         self.sync();
-         let mut vnc = self.vnc.as_mut().unwrap();
 
-         let action = agent.tick(&mut self.state.screen);
+         self.sync();
+         let mut screen_copy = self.state.screen.copy();
+         let action = agent.tick(&mut screen_copy);
+         self.render_frame(screen_copy);
+
+
+         let mut vnc = self.vnc.as_mut().unwrap();
          if self.mode=="atari" {
             if action==0 {
                vnc.send_key_event(false, XK_Left).unwrap();
@@ -283,7 +287,7 @@ impl GymRemote {
 
       //requires nonblocking before moving into main thread
    }
-   pub fn render_frame(&mut self) {
+   pub fn render_frame(&mut self, screen: &[u8]) {
       let width = self.shape.observation_space[0];
       let height = self.shape.observation_space[1];
 
@@ -293,8 +297,7 @@ impl GymRemote {
          for x in 0 .. width {
             for y in 0 .. height {
                let left = 3*(y * width + x) as usize;
-               let pixels = &self.state.screen;
-               imgbuf.put_pixel(x as u32, y as u32, image::Rgb([ pixels[left], pixels[left+1], pixels[left+2] ]));
+               imgbuf.put_pixel(x as u32, y as u32, image::Rgb([ screen[left], screen[left+1], screen[left+2] ]));
             }
          }
 
@@ -315,7 +318,6 @@ impl GymRemote {
 
       let pause = 1000 / self.fps;
       std::thread::sleep_ms(pause);
-      self.render_frame();
 
       let mut vnc = self.vnc.as_mut().unwrap();
 
