@@ -58,7 +58,7 @@ pub trait GymMember {
    fn start (&mut self, s: &GymShape, t: &GymState) -> ();
    fn reward (&mut self, gym_reward, gym_done) -> ();
    fn reset (&mut self) -> ();
-   fn tick (&mut self, &mut Vec<u8>) -> u64;
+   fn tick (&mut self, &mut Vec<u8>) -> gym_range;
    fn close (&mut self) -> ();
 }
 pub struct GymRemote {
@@ -141,21 +141,21 @@ impl GymRemote {
 
          let mut vnc = self.vnc.as_mut().unwrap();
          if self.mode=="atari" {
-            if action==0 {
+            if action[0]==0 {
                vnc.send_key_event(false, XK_Left).unwrap();
                vnc.send_key_event(false, XK_Right).unwrap();
                vnc.send_key_event(false, XK_Up).unwrap();
                vnc.send_key_event(false, XK_Down).unwrap();
                vnc.send_key_event(false, XK_space).unwrap();
-            } else if action==1 {
+            } else if action[0]==1 {
                vnc.send_key_event(true, XK_Left).unwrap();
-            } else if action==2 {
+            } else if action[0]==2 {
                vnc.send_key_event(true, XK_Right).unwrap();
-            } else if action==3 {
+            } else if action[0]==3 {
                vnc.send_key_event(true, XK_Up).unwrap();
-            } else if action==4 {
+            } else if action[0]==4 {
                vnc.send_key_event(true, XK_Down).unwrap();
-            } else if action==5 {
+            } else if action[0]==5 {
                vnc.send_key_event(true, XK_space).unwrap();
             }
          }
