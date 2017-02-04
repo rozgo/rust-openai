@@ -9,7 +9,7 @@ Docker and Rust are required for this client to work
 
 ###### Docker
 
-[Official](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-16-04)
+[Official Ubuntu 16.04](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-16-04)
 
 ###### Rust
 
