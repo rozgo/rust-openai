@@ -112,6 +112,8 @@ struct RewarderCommand {
 const ATARI_HEIGHT: u32 = 262;
 const ATARI_WIDTH: u32 = 160;
 
+
+
 impl GymRemote {
    pub fn recorder_cleanup(&mut self) -> () {
       let real_fps = self.frame / max(self.time.elapsed().as_secs() as u32, 1);
@@ -128,9 +130,13 @@ impl GymRemote {
       self.start_rewarder();
       self.start_vnc();
       let mut agent = self.start_agent(agent);
+      let mut prev_action = Vec::new();
+
+      use x11::keysym::*;
+      let atari_actions = &[XK_Left, XK_Right, XK_Up, XK_Down, XK_space];
+      let flash_actions = &[XK_Pointer_Button1, XK_Left, XK_Right, XK_Up, XK_Down, XK_space];
 
       loop {
-         use x11::keysym::*;
          if self.time.elapsed().as_secs() > self.duration { break; }
 
          self.sync();
@@ -140,14 +146,41 @@ impl GymRemote {
 
 
          let mut vnc = self.vnc.as_mut().unwrap();
-         if self.mode=="atari" {
-            if action[0]==0 {
-               vnc.send_key_event(false, XK_Left).unwrap();
-               vnc.send_key_event(false, XK_Right).unwrap();
-               vnc.send_key_event(false, XK_Up).unwrap();
-               vnc.send_key_event(false, XK_Down).unwrap();
-               vnc.send_key_event(false, XK_space).unwrap();
-            } else if action[0]==1 {
+         if action == prev_action { //pass
+         } else if self.mode=="atari" && action.len()==5 {
+            if action[0]!=prev_action[0] {
+               if action[0]==0 {
+                  vnc.send_key_event(false, XK_Left).unwrap();
+               } else {
+                  vnc.send_key_event(true, XK_Left).unwrap();
+               }
+            } else if action[1]!=prev_action[1] {
+               if action[1]==0 {
+                  vnc.send_key_event(false, XK_Left).unwrap();
+               } else {
+                  vnc.send_key_event(true, XK_Left).unwrap();
+               }
+            } else if action[0]!=prev_action[0] {
+               if action[0]==0 {
+                  vnc.send_key_event(false, XK_Left).unwrap();
+               } else {
+                  vnc.send_key_event(true, XK_Left).unwrap();
+               }
+            } else if action[0]!=prev_action[0] {
+               if action[0]==0 {
+                  vnc.send_key_event(false, XK_Left).unwrap();
+               } else {
+                  vnc.send_key_event(true, XK_Left).unwrap();
+               }
+            } else if action[0]!=prev_action[0] {
+               if action[0]==0 {
+                  vnc.send_key_event(false, XK_Left).unwrap();
+               } else {
+                  vnc.send_key_event(true, XK_Left).unwrap();
+               }
+            }
+
+ else if action[0]==1 {
                vnc.send_key_event(true, XK_Left).unwrap();
             } else if action[0]==2 {
                vnc.send_key_event(true, XK_Right).unwrap();
@@ -158,6 +191,7 @@ impl GymRemote {
             } else if action[0]==5 {
                vnc.send_key_event(true, XK_space).unwrap();
             }
+         } else if self.mode=="flash" && action.len()==8 {
          }
       }
       self.recorder_cleanup();
@@ -487,6 +521,7 @@ impl Gym {
       let mut screen_height = ATARI_HEIGHT;
       let mut offset_width = 0;
       let mut offset_height = 0;
+      let mut mode = "atari";
       if self.env_id.starts_with("flashgames.") {
          let data = Json::from_str(include_str!("../flashgames.json")).unwrap();
          let obj = data.as_object().unwrap()
@@ -496,6 +531,27 @@ impl Gym {
          screen_height = obj.get("height").unwrap().as_u64().unwrap() as u32;
          offset_width = 20;
          offset_height = 84;
+         mode = "flash";
+      }
+      let mut action_space: std::vec::Vec<usize> = Vec::new();
+      if mode=="flash" {
+         //mouse input
+         action_space.push(screen_width as usize);
+         action_space.push(screen_height as usize);
+         action_space.push(2);
+
+         //keyboard input
+         action_space.push(2); //left
+         action_space.push(2); //right
+         action_space.push(2); //up
+         action_space.push(2); //down
+         action_space.push(2); //spacebar
+      } else {
+         action_space.push(2); //joystick left
+         action_space.push(2); //joystick right
+         action_space.push(2); //joystick up
+         action_space.push(2); //joystick down
+         action_space.push(2); //red button
       }
       let r = GymRemote {
          black_screen: false,
@@ -505,14 +561,14 @@ impl Gym {
          env_id: format!("{: <99}", self.env_id).clone(),
          duration: self.duration,
          record_dst: self.record_dst.clone(),
-         mode: "atari".to_string(),
+         mode: mode.to_string(),
          vnc: None,
          rewarder: None,
          state: GymState {
             screen: vec![0; (screen_width * screen_height * 3) as usize]
          },
          shape: GymShape {
-            action_space: vec![6],
+            action_space: action_space,
             observation_space: vec![screen_width as usize, screen_height as usize, 3 as usize],
             reward_max : f64::INFINITY,
             reward_min : f64::NEG_INFINITY
